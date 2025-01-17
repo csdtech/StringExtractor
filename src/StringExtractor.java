@@ -36,11 +36,11 @@ import java.util.regex.Pattern;
  *
  * <ul>
  *     <li>android:text</li>
- *     <li>android:title
- *     <li>android:summary
- *     <li>android:label
- *     <li>android:hint
- *     <li>android:description
+ *     <li>android:title</li>
+ *     <li>android:summary</li>
+ *     <li>android:label</li>
+ *     <li>android:hint</li>
+ *     <li>android:description</li>
  * </ul>
  *  
  * <p>
@@ -66,8 +66,8 @@ public final class StringExtractor {
     private static final Pattern JAVA_STRING_PATTERN = Pattern.compile("\".*?\"", Pattern.CASE_INSENSITIVE);
     
     /** 
-     * pattern for matching supported xml attributes.
-     * supported attributes are text,title,label,hint,summary and description
+     * pattern for matching supported xml attributes 
+     * text,title,label,hint,summary and description
      */
     private static final Pattern XML_STRING_PATTERN = Pattern.compile("("+
     /** matches android:text="*" which is not starts with '?' or '@' */
@@ -263,6 +263,7 @@ public final class StringExtractor {
                             for(int i =0; i < inputFiles.size(); i++) {
                                 try {
                                     File input =  inputFiles.get(i);
+                                    //create a temporary xml file
                                     File tempXmlFile = new File(xml != null ? xml.getParent() : input.getParent(), String.format("tmp_ext_str_%s", i + 1));
                                     tempXmlFiles.add(tempXmlFile);
                                     System.out.printf("\r\nSearching strings on: %s", input.getAbsolutePath());
@@ -336,7 +337,7 @@ public final class StringExtractor {
 
                         int count = 0;
                         while(nameMatcher.find()) {
-                            // replace any string name our new one
+                            // replace any string name with our new one
                             nameMatcher.appendReplacement(strbuffer, String.format(name, ++count));
                         }
                         //append the rest of text
