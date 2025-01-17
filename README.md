@@ -1,6 +1,9 @@
 # StringExtractor
 StringExtractor is used to extracts raw strings from a java and xml files of Android  apps project to a optional xml file and link them
 ## Usage
+you can include StringExtractor as library or in your code to extract the strings.
+
+
 This is a sample code to extracts the strings from JavaFile.java and save to myapp_strings.xml
 ```java
 File inputFile = new File("JavaFile.java");
