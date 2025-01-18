@@ -1,12 +1,8 @@
 # StringExtractor
 StringExtractor is used to extracts raw strings from a java and xml files of Android  apps project to a optional xml file and link them
 ## Usage
-<<<<<<< HEAD
 you can include StringExtractor as library or in your code to extract the strings.
 
-
-=======
->>>>>>> c2e4fba609a236dbf3557eeac94edd41d29819f3
 This is a sample code to extracts the strings from JavaFile.java and save to myapp_strings.xml
 ```java
 File inputFile = new File("JavaFile.java");
@@ -39,7 +35,6 @@ Options are:
 -x FILE   the file to write the genarated xml.
 -r        search for files recursively and extract their strings. this option require -d to be specified.
 -b        backup the original file to filename.backup .
-<<<<<<< HEAD
 -c        use class ExtractedString for getting strings from java files.
 -h        show this usage message.
 </pre>
@@ -58,10 +53,5 @@ when you use option -c from terminal or set ExtractedString to true the file 'Ex
      ExtractedString.setContext(this);
 }
  ```
-=======
--c        use class ExtractedString for java files. this will generate java file 'ExtractedString.java' in the same directory of input file to access strings from classes that do not have a Context. and you must call ExtractedString.setContext(context) from your application or activity onCreate.
--h        show this usage message.
-</pre>
 
->>>>>>> c2e4fba609a236dbf3557eeac94edd41d29819f3
-> Note: StringExtractor is only for android apps project. 
+>#### Note: StringExtractor is only for android apps project. 
