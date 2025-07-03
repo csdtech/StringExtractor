@@ -20,11 +20,11 @@ Because we set backupFile to true the file JavaFile.java will be renamed to Java
 ## Command Line
  firstly compile the file using
 ```
-javac com.sdtech.StringExtractorTerminal.java
+javac com.sdtech.stringextractor.StringExtractorTerminal.java
 ```
  and then executes with
 <pre>
-java com.sdtech.StringExtractorTerminal -[r|b|c] -i FILE -d PATH -p TEXT -s TEXT -x FILE
+java com.sdtech.stringextractor.StringExtractorTerminal -[r|b|c] -i FILE -d PATH -p TEXT -s TEXT -x FILE
 </pre>
 Options are:
 <pre>
