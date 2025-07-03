@@ -12,7 +12,7 @@ String suffix = "string";
 //Exracts the strings
 try{
     StringExtractor.extractString(inputFile,xmlFile,/*ExtractedString=*/true,prefix,suffix,/*backupFile=*/true);
-}catch (Exception e){
+}catch (ExtractionException e){
     //handle errors here
 }
 ```
@@ -20,11 +20,11 @@ Because we set backupFile to true the file JavaFile.java will be renamed to Java
 ## Command Line
  firstly compile the file using
 ```
-javac StringExtractor.java
+javac com.sdtech.StringExtractorTerminal.java
 ```
  and then executes with
 <pre>
-java StringExtractor -[r|b|c] -i FILE -d PATH -p TEXT -s TEXT -x FILE
+java com.sdtech.StringExtractorTerminal -[r|b|c] -i FILE -d PATH -p TEXT -s TEXT -x FILE
 </pre>
 Options are:
 <pre>
@@ -53,5 +53,6 @@ when you use option -c from terminal or set ExtractedString to true the file 'Ex
      ExtractedString.setContext(this);
 }
  ```
-
+### Custom Implementation
+you can read the documentation [Here](/docs) for custom implementation.
 >#### Note: StringExtractor is only for android apps project. 

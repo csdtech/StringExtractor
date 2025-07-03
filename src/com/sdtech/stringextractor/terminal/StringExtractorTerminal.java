@@ -1,4 +1,5 @@
-/** Copyright 2025 Suleman 'sdtech' Hamisu
+/**
+ * Copyright 2025 Suleman 'sdtech' Hamisu
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +14,10 @@
  * limitations under the License.
  */
 
+package com.sdtech.stringextractor.terminal;
+
+import com.sdtech.stringextractor.StringExtractor;
+
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -20,6 +25,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+
 import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -27,99 +33,33 @@ import java.util.concurrent.Future;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * StringExtractor is used to extracts raw strings from
- * a java and xml files to a optional xml file and link them.
- * <p>
- * StringExtract extracts any non blank strings from java file.
- * and only extracts the strings from supported xml attributes below:
- *
- * <ul>
- *     <li>android:text</li>
- *     <li>android:title</li>
- *     <li>android:summary</li>
- *     <li>android:label</li>
- *     <li>android:hint</li>
- *     <li>android:description</li>
- * </ul>
- *  
- * <p>
- *   Created by sdtech @ 11:54 AM 13 Jan 2025.
- *   Github link <a href="https://github.com/csdtech">https://github.com/csdtech</a>
- * </p>
- */
-public final class StringExtractor {
+public class StringExtractorTerminal {
     
-    /**
-     * prefix for linking strings from java
-     */
-    private static final String JAVA_CODE="R.string.";
-    
-    /**
-     * prefix for linking strings from xml
-     */
-    private static final String XML_CODE="@string/";
-    
-    /**
-     * pattern for matching any non blank string in java
-     */
-    private static final Pattern JAVA_STRING_PATTERN = Pattern.compile("\".*?\"", Pattern.CASE_INSENSITIVE);
-    
-    /** 
-     * pattern for matching supported xml attributes 
-     * text,title,label,hint,summary and description
-     */
-    private static final Pattern XML_STRING_PATTERN = Pattern.compile("("+
-    /** matches android:text="*" which is not starts with '?' or '@' */
-    "android\\:text=\"[^@\\?]{1}.*?\"|" +
-    
-    /** matches android:title="*" which is not starts with '?' or '@' */
-    "android\\:title=\"[^@\\?]{1}.*?\"|" +
-    
-    /** matches android:hint="*" which is not starts with '?' or '@' */
-    "android\\:hint=\"[^@\\?]{1}.*?\"|" +
-    
-    /** matches android:summary="*" which is not starts with '?' or '@' */
-    "android\\:summary=\"[^@\\?]{1}.*?\"|" +
-    
-    /** matches android:description="*" which is not starts with '? or '@' */
-    "android\\:description=\"[^@\\?]{1}.*?\"|" +
-    
-    /** matches android:label="*" which is not starts with '?' or '@' */
-    "android\\:label=\"[^@\\?]{1}.*?\""+
-    /**
-     * Note: if one of the following attributes contains the text
-     * which starts with '@' or '?' will be ignore even if it is not
-     * '@string/*' or '?attr/*'.
-     */
-    ")", Pattern.CASE_INSENSITIVE);
-
     /**
      * indicates weather an error occur or not when extracting single file strings.
      */
     private static boolean allDone = true;
-    
+
     /**
      * indicates if options -d and -r are specified.
      */
     private static boolean modeRecursive = false;
-    
+
     /**
      * single count to use on all files if modeMecursive == true
      * to avoid bad resources linking.
      */
-    private static int rcCount = 0;
-    
+    private static int extractCount = 0;
+
     /** 
-     * <p>the main method to pass all the options and arguments.</p>
+     * The main method to pass all the options and arguments.<p>
      *
-     * <strong>Note:</strong> this method is intended to use only from command line
-     * if you want use recursive extraction out side the comand line
-     * you have to define your own implementation.
+     * we will use the options and arguments to create new {@link com.sdtech.stringextractor.StringExtractor}.
+     *
      * @param args the arguments to parse options and flags
      * @throws Exception if an IOException occured.
      */
-	public static void main(String... args)throws Exception {
+    public static void main(String... args)throws Exception {
         if(args.length <= 0) {
             showUsage("");
             return;
@@ -129,7 +69,7 @@ public final class StringExtractor {
                 return;
             }
             if(args[0].matches("[-]{1,2}((r|b|c|i|d|x|p|s)|([rbc]{3}))")) {
-                showUsage("", "a minimum of two options required");
+                showUsage("", "option '" + args[0] + "' require one argument.");
                 return;
             }
             showUsage(args[0]);
@@ -218,20 +158,20 @@ public final class StringExtractor {
                 System.out.print("do you want use -r option [Y/n] ? : ");
                 recursive = new BufferedReader(new InputStreamReader(System.in)).readLine().toLowerCase().matches("y");
             }
-            if(pathToScan==null){
-                recursive=false;
+            if(pathToScan == null) {
+                recursive = false;
             }
-            
+            /** make variables final for use in anonymous classes. i.e Runnable */
             final String  prx   = prefixText;
             final String  sfx   = suffixText;
             final boolean bkp   = backupFile;
             final boolean esc   = useExtractedString;
             final File    xml   = xmlFile;
             final File    input = inputFile;
-            
+
             if(recursive) {
-                modeRecursive=true;
-                rcCount=0;
+                modeRecursive = true;
+                extractCount = 0;
                 final File path = pathToScan;
                 final long startTime = System.currentTimeMillis();
 
@@ -253,7 +193,7 @@ public final class StringExtractor {
                             if(inputFiles.size() < 2) {
                                 try {
                                     System.out.printf("\r\nSearching strings on: %s", inputFiles.get(0).getAbsolutePath());
-                                    extractString(inputFiles.get(0), xml, esc, prx, sfx, bkp);
+                                    extractString(inputFiles.get(0), xml, esc, prx, sfx, bkp, true, extractCount);
                                     System.out.printf("\r\nextracted strings from %s was saved to %s in %s ms.", inputFiles.get(0).getAbsolutePath(), xml != null ? xml.getAbsolutePath() : inputFiles.get(0).getAbsolutePath() + ".extracted_strings.xml", System.currentTimeMillis() - startTime);
                                 } catch(Exception e) {
                                     e.printStackTrace(System.out);
@@ -267,7 +207,7 @@ public final class StringExtractor {
                                     File tempXmlFile = new File(xml != null ? xml.getParent() : input.getParent(), String.format("tmp_ext_str_%s", i + 1));
                                     tempXmlFiles.add(tempXmlFile);
                                     System.out.printf("\r\nSearching strings on: %s", input.getAbsolutePath());
-                                    extractString(input, tempXmlFile, esc, prx, sfx, bkp);
+                                    extractString(input, tempXmlFile, esc, prx, sfx, bkp, false, 0);
                                 } catch(Exception e) {
                                     e.printStackTrace(System.out);
                                 }
@@ -277,8 +217,8 @@ public final class StringExtractor {
                     if(result2.get()) {
                         executor.shutdown();
                         //merge our xml files
-                        if(rcCount<=0){
-                             System.out.printf("\r\n%s files was scanned and no strings found.",inputFiles.size());
+                        if(extractCount <= 0) {
+                            System.out.printf("\r\n%s files was scanned and no strings found.", inputFiles.size());
                             return;
                         }
                         File finalXml = xml;
@@ -298,7 +238,7 @@ public final class StringExtractor {
                             } finally {
                                 //delete the file if exists and read success.
                                 if(read && file.delete()) {} else {
-                                    if(file.exists()){
+                                    if(file.exists()) {
                                         System.out.printf("\r\nunable to %s the temp file: %s", read ? "delete" : "read", file.getAbsoluteFile());
                                     }
                                 }
@@ -309,9 +249,9 @@ public final class StringExtractor {
                         StringBuilder sb = new StringBuilder();
                         sb.append(xmlStart);
                         String[] lines = strb.toString().split("\r\n");
-                        for(String line : lines){
-                            if(line.startsWith("    <string")){
-                                sb.append("\r\n"+line);
+                        for(String line : lines) {
+                            if(line.matches("[\\s]{0,}\\<string.*?")) {
+                                sb.append("\r\n" + line);
                             }
                         }
                         sb.append(xmlEnd);
@@ -345,14 +285,14 @@ public final class StringExtractor {
                         xmlCode = strbuffer.toString();
                         //write and save our xml code
                         writeFile(finalXml, xmlCode);
-                        System.out.printf("\r\n%s strings was extracted from %s files and saved to %s in %s ms.",rcCount ,tempXmlFiles.size(), finalXml.getAbsolutePath(), System.currentTimeMillis() - startTime);
+                        System.out.printf("\r\n%s strings was extracted from %s files and saved to %s in %s ms.", extractCount , tempXmlFiles.size(), finalXml.getAbsolutePath(), System.currentTimeMillis() - startTime);
                     }
-                }else if(result.get() && pathToScan.exists() && pathToScan.isDirectory()){
-                    System.out.println("\r\nNo java or xml file found on path: "+pathToScan.getAbsolutePath());
+                } else if(result.get() && pathToScan.exists() && pathToScan.isDirectory()) {
+                    System.out.println("\r\nNo java or xml file found on path: " + pathToScan.getAbsolutePath());
                 }
             } else {
-                modeRecursive=false;
-                rcCount=0;
+                modeRecursive = false;
+                extractCount = 0;
                 final long startTime = System.currentTimeMillis();
                 ExecutorService executor = Executors.newSingleThreadExecutor();
                 Future<Boolean> result = executor.submit(new Runnable(){
@@ -360,41 +300,42 @@ public final class StringExtractor {
                     @Override
                     public void run() {
                         if(input == null) {
-                            allDone=false;
+                            allDone = false;
                             System.out.println("input file is null.");
                             return;
                         } else if(!input.exists()) {
-                            allDone=false;
+                            allDone = false;
                             System.out.println("input file is not exists.");
                             return;
-                        }else if(input.isDirectory()){
-                            allDone=false;
+                        } else if(input.isDirectory()) {
+                            allDone = false;
                             System.out.println("input file is a directory.");
                             return;
                         }
                         System.out.printf("Extracting strings of: %s", input.getAbsolutePath());
                         try {
-                            extractString(input, xml, esc, prx, sfx, bkp);
+                            extractString(input, xml, esc, prx, sfx, bkp, false, 0);
                         } catch(Exception e) {
                             e.printStackTrace(System.out);
                         }
                     }
                 }, true);
                 if(result.get()) {
-                    if(allDone){
+                    if(allDone) {
                         System.out.printf("\r\nextracted strings from %s was saved to %s in %s ms.", input.getAbsolutePath(), xml != null ? xml.getAbsolutePath() : input.getAbsolutePath() + ".extracted_strings.xml", System.currentTimeMillis() - startTime);
-                     }
+                    }
                     executor.shutdown();
                 }
             }
         }   
-	}
+    }
+    /** find the files in folder dir and add to ArrayList found */
     private static void findFiles(File dir, ArrayList<File> found) {
         if(dir.isFile()) {
-           System.out.printf("\r\nFile: %s is not a directory", dir.getAbsolutePath());
-           return;
-        }else if(!dir.exists() || dir.listFiles()==null){
-            System.out.printf("\r\nFile: %s is %s", dir.getAbsolutePath(),dir.exists() ? "not contains any files" : "not exists.");
+            System.out.printf("\r\nFile: %s is not a directory", dir.getAbsolutePath());
+            return;
+        } else if(!dir.exists() || dir.listFiles() == null) {
+            System.out.printf("\r\nFile: %s is %s", dir.getAbsolutePath(), dir.exists() ? "not contains any files" : "not exists.");
             return;
         }
         for(File child : dir.listFiles()) {
@@ -405,12 +346,13 @@ public final class StringExtractor {
             }
         }
     }
+    /** print the usage of this class in terminal */
     private static void showUsage(String option, String... message) {
         String help = "";
         help += option != "" ? " StringExtractor : unknown option '" + option + "'" : "";
         help += message.length >= 1 ? "\r\n" + message[0] : "";
         help += "\r\n  usage: StringExtractor -[r|b|c] -i FILE -d PATH -p TEXT -s TEXT -x FILE";
-        help += "\r\n\r\n    Extract raw Strings from xml and java files of android app project to optional xml file and link them for example android:label=\"some text\" will become android:label=\"@string/extracted1\" and ";
+        help += "\r\n\r\n    Extract raw Strings from xml and java files of android app project to optional xml file and link them.\r\n     for example android:label=\"some text\" will become android:label=\"@string/extracted1\" and ";
         help += " the file extracted.xml will be created with code <string name=\"extracted1\">some text</string>. after extraction of xml file.";
         help += "\r\n  Options are:";
         help += "\r\n    -i FILE        the single xml or java file to scan the string. options [-d,-r] are ignore if specified.";
@@ -424,157 +366,37 @@ public final class StringExtractor {
         help += "\r\n    -h             show this usage message.";
         System.out.println(help);
     }
-    /**
-     * Extracts the strings from single xml or java file
-     * and save to xml file.
-     *
-     * @param fileToRead      the valid xml or java file to read and extract strings from.
-     * @param xmlFile         the file to write the extracted strings.
-     * @param extractedString if true and fileToRead is java file the class ExtractedString will be used to get the strings.
-     * @param prefix          the String to use as prefix for generating strings name in xml
-     * @param suffix          the String to use as suffix for generating strings name in xml
-     * @param backupFile      indicates wether to backup the file before writing the extracted strings to file.
-     * @throws Exception      if IOException occured.
-     */
-    public static void extractString(File fileToRead, File xmlFile, boolean extractedString, String prefix, String suffix, boolean backupFile)throws Exception {
-        String fileString = readFile(fileToRead);
-        Matcher stringMatcher = null;
-        boolean javaCode = false;
-        if(fileToRead.getName().endsWith(".java")) {
-            stringMatcher = JAVA_STRING_PATTERN.matcher(fileString);
-            javaCode = true;
-        } else if(fileToRead.getName().endsWith(".xml")) {
-            stringMatcher = XML_STRING_PATTERN.matcher(fileString);
-        } else {
-            System.out.println("fileToRead must be valid java or xml file. but got: " + fileToRead.getAbsolutePath());
-            return;
-        }
-        if(prefix == null) {
-            prefix = "extracted_string%s";
-        } else if(!prefix.endsWith("%s")) {
-            prefix += "%s";
-        }
-        if(suffix == null) {
-            suffix = "%s";
-        } else if(!suffix.endsWith("%s")) {
-            suffix += "%s";
-        }
-        if(xmlFile == null) {
-            xmlFile = new File(fileToRead.getParent(), fileToRead.getName() + "_extracted_strings.xml");
-        }
 
-        ArrayList<String> extracted = new ArrayList<String>();
-        ArrayList<String> xml_extracted = new ArrayList<String>();
-        ArrayList<String> extracted_name = new ArrayList<String>();
-        int count = modeRecursive ? rcCount : 0;
-        while(stringMatcher.find()) {
-            String ext_tmp =  stringMatcher.group();
-            if(!javaCode) {
-                ext_tmp = ext_tmp.replaceAll("android\\:.*?=", "");
-            }
-            // skip empty and blank string 
-            if(ext_tmp.matches("(\"\"|\"[ ]{1,}\")"))continue;
-            // skip if string is present before.
-            if(xml_extracted.contains(ext_tmp))continue;
-            String ext = "";
-            ++count;
-            if(javaCode) {
-                ext = extractedString ?  String.format("ExtractedString.getString(" + JAVA_CODE + prefix + ")", String.format(suffix, count)): 
-                String.format("getResources().getString(" + JAVA_CODE + prefix + ")", String.format(suffix, count));
-            } else {
-                ext = String.format(XML_CODE + prefix, String.format(suffix, count));
-            }
-            extracted_name.add(String.format(prefix, String.format(suffix, count)));
-            xml_extracted.add(ext_tmp);
-            extracted.add(ext);
-        }
-        if(modeRecursive)rcCount=count;
-        if(xml_extracted.size() > 0 && backupFile) {
-            fileToRead.renameTo(new File(fileToRead.getPath() + ".backup"));
-        }
-        if(extracted.size()<=0){
-            System.out.printf("\r\nNo strings found on: %s",fileToRead.getAbsolutePath());
-            return;
-        }else {
-            System.out.printf("\r\n%s strings was found on: %s",extracted.size(),fileToRead.getAbsolutePath());
-        }
-        //write the extracted strings to xml file
-        FileOutputStream fout = new FileOutputStream(xmlFile);
-        fout.write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<resources>".getBytes());
-        for(int i =0; i < xml_extracted.size();i++) {
-            String str = xml_extracted.get(i);
-            // remove the qoutes from string
-            str = str.substring(1, str.length() - 1);
-            fout.write(String.format("\r\n    <string name=\"%s\">%s</string>", extracted_name.get(i), str).getBytes());
-        }
-        fout.write("\r\n</resources>".getBytes());
-        fout.flush();
-        fout.close();
-        //replacing and save the modified code to file
-        for(int i =0; i < xml_extracted.size();i++) {
-            if(javaCode) {
-                fileString = fileString.replace(xml_extracted.get(i), extracted.get(i));
-            } else {
-                fileString = fileString.replace(xml_extracted.get(i), "\"" + extracted.get(i) + "\"");
-            }
-        }
-        writeFile(fileToRead, fileString);
-        /**
-         * Generate ExtractedString.java file if enable
-         */
-        if(javaCode && extractedString) {
-            String extStr ="";
-            String pkgName = "";
-            Matcher pkgMatcher = Pattern.compile("package .*?;").matcher(fileString);
-            //try to find the package name for the file if possible
-            if(pkgMatcher.find()) {
-                pkgName = pkgMatcher.group();
-            }
-            extStr += pkgName != "" ? pkgName + "\r\n" : "";
-            extStr += "\r\nimport android.content.Context;\r\n";
-            extStr += "\r\n/** A helper class for retrieving the extracted strings. */\r\n";
-            extStr += "\r\npublic final class ExtractedString {\r\n";
-            extStr += "\r\n    /** The Context we use to retrieves the strings from xml resources. */\r\n";
-            extStr += "\r\n    private static Context mContext;\r\n";
-            extStr += "\r\n    /**";
-            extStr += "\r\n     * we need to store our context here to retrieve the strings from every class. ";
-            extStr += "\r\n     * this method need to called once from {@link Application} or {@link Activity} onCreate.";
-            extStr += "\r\n     * @param context      The {@link Context} to store.";
-            extStr += "\r\n     */";
-            extStr += "\r\n    public static void setContext(Context context){";
-            extStr += "\r\n        mContext = context;";
-            extStr += "\r\n    }\r\n";
-            extStr += "\r\n    /**";
-            extStr += "\r\n     * retrieves our extracted string.";
-            extStr += "\r\n     * @param strResId the string id generated by StringExtractor.";
-            extStr += "\r\n     * @return the extracted string if our {@link Context} not null. \"\" otherwise.";
-            extStr += "\r\n     */";
-            extStr += "\r\n     public static String getString(int strResId) {";
-            extStr += "\r\n         if(mContext != null){";
-            extStr += "\r\n             return mContext.getResources().getString(strResId);";
-            extStr += "\r\n          }";
-            extStr += "\r\n         return \"\";";
-            extStr += "\r\n     }";
-            extStr += "\r\n}";
-            writeFile(new File(fileToRead.getParent(), "ExtractedString.java"), extStr);
-        }
-    };
+    /** do the extraction */
+    private static void extractString(File input, File xmlFile, boolean esc, String prx, String sfx, boolean bkp, boolean recsv, int count) throws Exception {
+        StringExtractor.extractString(
+        /*fileToRead=*/input,
+        /*xmlFile=*/xmlFile,
+        /*extractedString=*/esc,
+        /*prefix=*/prx,
+        /*suffix=*/sfx,
+        /*backupFile=*/bkp,
+        /*modeRecursive=*/recsv,
+        /*extractCount=*/count);
+    }
 
     /**
      * return the string read from the given file.
      */
     private static String readFile(File f) throws Exception {
         String str = "";
-        int buf = (int) f.length();
         InputStream in = new FileInputStream(f);
-        byte[] data = new byte[buf];
-        in.read(data);
-        in.close();
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        out.write(data);
-        str = out.toString();
-        out = null;
+        byte[] data = new byte[4096];
 
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        int read;
+        while((read=in.read(data)) != -1){
+            out.write(data,0,read);
+        }
+        str = out.toString();
+        in.close();
+        out.close();
+        
         return str;
     }
     /**
@@ -587,4 +409,3 @@ public final class StringExtractor {
         fout.close();
     }
 }
-
